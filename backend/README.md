@@ -263,7 +263,7 @@ or
 ```
 #### POST '/questions'
 - Search for question(s) use searchTerm
-- return random question and success value
+- return question(s) have relevant with searchTerm and sccuess value
 - Sample: curl -X POST http://127.0.0.1:5000/questions -H 'content-type: application/json' -d '{"searchTerm": "srs"}'
 ```
 {
