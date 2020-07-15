@@ -66,29 +66,148 @@ One note before you delve into your tasks: for each endpoint you are expected to
 8. Create a POST endpoint to get questions to play the quiz. This endpoint should take category and previous question parameters and return a random questions within the given category, if provided, and that is not one of the previous questions. 
 9. Create error handlers for all expected errors including 400, 404, 422 and 500. 
 
-REVIEW_COMMENT
+## API Reference
+### Error Handling
+Errors are returned as json objects in the following format
 ```
-This README is missing documentation of your endpoints. Below is an example for your endpoint to get all categories. Please use it as a reference for creating your documentation and resubmit your code. 
-
-Endpoints
-GET '/categories'
-GET ...
-POST ...
-DELETE ...
-
-GET '/categories'
-- Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
-- Request Arguments: None
-- Returns: An object with a single key, categories, that contains a object of id: category_string key:value pairs. 
-{'1' : "Science",
-'2' : "Art",
-'3' : "Geography",
-'4' : "History",
-'5' : "Entertainment",
-'6' : "Sports"}
-
+{
+        "success": False, 
+        "error": 404,
+        "message": "Not found"
+}
+{
+        "success": False, 
+        "error": 422,
+        "message": "unprocessable"
+}
+{
+        "success": False, 
+        "error": 500,
+        "message": "internal server error"
+}
+{
+        "success": False, 
+        "error": 400,
+        "message": "bad request"
+}
 ```
+### Endpoints
 
+#### GET '/categories'
+- Return all categories in object with key and value 
+- Sample : curl -X GET http://127.0.0.1:5000/categories
+or
+- curl http://127.0.0.1:5000/categories
+```
+{
+  "categories": {
+    "1": "Science", 
+    "2": "Art", 
+    "3": "Geography", 
+    "4": "History", 
+    "5": "Entertainment", 
+    "6": "Sports"
+  }, 
+  "success": true
+}
+```
+#### GET '/questions'
+- Return all questions objects, total questions, categories, current_category
+- For each page only 10 questions via request argument to select page number start from one, by default set page one 
+- Sample : curl -X GET http://127.0.0.1:5000/questions
+or
+- curl http://127.0.0.1:5000/questions
+```
+{
+  "categories": {
+    "1": "Science",
+    "2": "Art",
+    "3": "Geography",
+    "4": "History",
+    "5": "Entertainment",
+    "6": "Sports"
+  },
+  "current_category": [
+    2,
+    3,
+    4
+  ],
+  "questions": [
+    {
+      "answer": "George Washington Carver",
+      "category": 2,
+      "difficulty": 4,
+      "id": 2,
+      "question": "Who invented Peanut Butter?"
+    },
+    {
+      "answer": "Lake Victoria",
+      "category": 2,
+      "difficulty": 3,
+      "id": 3,
+      "question": "What is the largest lake in Africa?"
+    },
+    {
+      "answer": "The Palace of Versailles",
+      "category": 3,
+      "difficulty": 3,
+      "id": 4,
+      "question": "In which royal palace would you find the Hall of Mirrors?"
+    },
+    {
+      "answer": "Agra",
+      "category": 2,
+      "difficulty": 3,
+      "id": 5,
+      "question": "The Taj Mahal is located in which Indian city?"
+    },
+    {
+      "answer": "Mona Lisa",
+      "category": 3,
+      "difficulty": 2,
+      "id": 6,
+      "question": "La Giaconda is better known as what?"
+    },
+    {
+      "answer": "one",
+      "category": 4,
+      "difficulty": 2,
+      "id": 7,
+      "question": "How many paintings did Van Gogh sell in his lifetime?"
+    },
+    {
+      "answer": "The Liver",
+      "category": 4,
+      "difficulty": 1,
+      "id": 9,
+      "question": "What is the heaviest organ in the human body?"
+    },
+    {
+      "answer": "Alexander Fleming",
+      "category": 3,
+      "difficulty": 1,
+      "id": 10,
+      "question": "Who discovered penicillin?"
+    },
+    {
+      "answer": "Blood",
+      "category": 4,
+      "difficulty": 1,
+      "id": 11,
+      "question": "Hematology is a branch of medicine involving the study of what?"
+    },
+    {
+      "answer": "Scarab",
+      "category": 4,
+      "difficulty": 4,
+      "id": 12,
+      "question": "Which dung beetle was worshipped by the ancient Egyptians?"
+    }
+  ],
+  "success": true,
+  "total_questions": 13
+}
+```
 
 ## Testing
 To run the tests, run

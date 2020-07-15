@@ -37,16 +37,17 @@ class TriviaTestCase(unittest.TestCase):
         data = json.loads(x.data)
         self.assertEqual(x.status_code, 200)
         self.assertEqual(data["success"], True)
-        self.assertTrue(len(data["category"]))
+        self.assertTrue(len(data["categories"]))
 
     def test_get_paginated_question(self): #done
         x = self.client().get('/questions?page=1')
         data = json.loads(x.data)
         self.assertEqual(x.status_code, 200)
         self.assertEqual(data["success"], True)
-        self.assertTrue(len(data["question"]))
-        self.assertTrue(data["total_question"])
-        self.assertTrue(len(data["Category"]))
+        self.assertTrue(len(data["questions"]))
+        self.assertTrue(data["total_questions"])
+        self.assertTrue(len(data["categories"]))
+        self.assertTrue(len(data["current_category"]))
 
     def test_get_paginated_question_404(self):#done
         x = self.client().get('/questions?page=1000000')
@@ -94,18 +95,18 @@ class TriviaTestCase(unittest.TestCase):
 
     def test_search_questions(self):
         insert_data = {
-            'search_term': 'x',
+            'searchTerm': 'x',
         }
         x = self.client().post('/questions', json=insert_data)
         data = json.loads(x.data)
         self.assertEqual(x.status_code, 200)
         self.assertEqual(data["success"], True)
-        self.assertTrue(len(data["question"]))
+        self.assertTrue(len(data["questions"]))
         self.assertTrue(data["count"])
 
     def test_search_questions_422(self):
         insert_data = {
-            'search_term': None,
+            'searchTerm': None,
         }
         x = self.client().post('/questions', json=insert_data)
         data = json.loads(x.data)
@@ -115,7 +116,7 @@ class TriviaTestCase(unittest.TestCase):
 
     def test_search_questions_422(self):
         insert_data = {
-            'search_term': None,
+            'searchTerm': None,
         }
         x = self.client().post('/questions', json=insert_data)
         data = json.loads(x.data)
@@ -140,7 +141,7 @@ class TriviaTestCase(unittest.TestCase):
     def test_play_quiz(self):
         insert_data = {
             'previous_questions': [],
-            'category': 1
+            'quiz_category': {'id':1}
         }
         res = self.client().post('/quizzes', json=insert_data)
         data = json.loads(res.data)

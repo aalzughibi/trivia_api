@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, abort, jsonify
+from flask import Flask, request, abort, jsonify,render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
@@ -28,48 +28,12 @@ def create_app(test_config=None):
   Create an endpoint to handle GET requests 
   for all available categories.
   '''
+  @app.route('/')
+  def index():
+    return render_template('index.html')
   @app.route('/categories', methods = ['GET'])
   def get_all_categories():
-    # if True:
-    #   if True:
-    #     c  =  Category(type = 'Science')
-    #     c.insert()
-    #     c  =  Category(type = 'Art')
-    #     c.insert()
-    #     c  =  Category(type = 'Geography')
-    #     c.insert()
-    #     c  =  Category(type = 'History')
-    #     c.insert()
-    #     c  =  Category(type = 'Entertainment')
-    #     c.insert()
-    #     c  =  Category(type = 'Sports')
-    #     c.insert()
-    #     ###############################################
-    #     q = Question(question = "Whose autobiography is entitled 'I Know Why the Caged Bird Sings'?",answer = 'Maya Angelou',category =2,difficulty=4)
-    #     q.insert()
-    #     q = Question(question = "Who invented Peanut Butter?",answer = 'George Washington Carver',category =2,difficulty=4)
-    #     q.insert()
-
-    #     q = Question(question = "What is the largest lake in Africa?",answer = 'Lake Victoria',category =2,difficulty=3)
-    #     q.insert()
-    #     q = Question(question = "In which royal palace would you find the Hall of Mirrors?",answer = 'The Palace of Versailles',category =3,difficulty=3)
-    #     q.insert()
-    #     q = Question(question = "The Taj Mahal is located in which Indian city?",answer = 'Agra',category =2,difficulty=3)
-    #     q.insert()
-    #     q = Question(question = "La Giaconda is better known as what?",answer = 'Mona Lisa',category =3,difficulty=2)
-    #     q.insert()
-    #     q = Question(question = "How many paintings did Van Gogh sell in his lifetime?",answer = 'one',category =4,difficulty=2)
-    #     q.insert()
-    #     q = Question(question = "Which American artist was a pioneer of Abstract Expressionism, and a leading exponent of action painting?",answer = 'Jackson Pollock',category =2,difficulty=2)
-    #     q.insert()
-    #     q = Question(question = "What is the heaviest organ in the human body?",answer = 'The Liver',category =4,difficulty=1)
-    #     q.insert()
-    #     q = Question(question = "Who discovered penicillin?",answer = 'Alexander Fleming',category =3,difficulty=1)
-    #     q.insert()
-    #     q = Question(question = "Hematology is a branch of medicine involving the study of what?",answer = 'Blood',category =4,difficulty=1)
-    #     q.insert()
-    #     q = Question(question = "Which dung beetle was worshipped by the ancient Egyptians?",answer = 'Scarab',category =4,difficulty=4)
-    #     q.insert()
+   
     categories = Category.query.order_by('id').all()
     current_category = {}
 
@@ -80,7 +44,7 @@ def create_app(test_config=None):
       abort(404)
     return jsonify({
         'success':True,
-        'category':current_category
+        'categories':current_category
     })
   '''
   @TODO: 
@@ -94,27 +58,52 @@ def create_app(test_config=None):
   ten questions per page and pagination at the bottom of the screen for three pages.
   Clicking on the page numbers should update the questions. 
   '''
-  def pageinate(request,selection):
-    page = request.args.get('page',1,type=int)
-    start = (page-1)* QUESTIONS_PER_PAGE
-    end = start + QUESTIONS_PER_PAGE
-    questions = [question.format() for question in selection]
-    current_questions = questions[start:end]
-    return current_questions
+  def paginate_questions(request):
+    page = request.args.get('page', 1, type=int)
+    start = (page-1)*QUESTIONS_PER_PAGE
+    end = start+QUESTIONS_PER_PAGE
+    questions = Question.query.all()
+    return questions[start:end]
+
+  def format_data(items):
+    formatted_items = [item.format() for item in items]
+    return formatted_items
   # ##### ##### ##### ##### ##### ##### #####
   @app.route('/questions',methods = ['GET'])
   def get_all_question():
-    question = Question.query.order_by('id').all()
-    current_question = pageinate(request,question)
-    if len(current_question) ==0:
+    questions = paginate_questions(request)
+    if len(questions) == 0:
       abort(404)
-    category = Category.query.order_by('id').all()
-    category = [c.format() for c in category]
+    formatted_questions = format_data(questions)
+    categories = Category.query.order_by('id').all()
+    formatted_categories = {}
+    for category in categories:
+      formatted_categories[category.id] = category.type
+    total_question = len(Question.query.all())
+    current_category = list(set([ques['category'] for ques in formatted_questions]))
+    
     return jsonify({
-      'success':True,
-      'question':current_question,
-      'total_question':Question.query.count(),
-      'Category':category})
+            'success': True,
+            'questions': formatted_questions,
+            'total_questions': total_question,
+            'categories': formatted_categories,
+            'current_category': current_category
+        })
+  # def get_all_question():
+  #   question = Question.query.order_by('id').all()
+  #   current_question = pageinate(request,question)
+  #   if len(current_question) ==0:
+  #     abort(404)
+  #   category = Category.query.order_by('id').all()
+  #   formatted_categories = {}
+  #   for category in category:
+  #     formatted_categories[category.id] = category.type
+  #   current_category = list(set([ques['category'] for ques in current_question]))
+  #   return jsonify({
+  #     'success':True,
+  #     'questions':current_question,
+  #     'total_questions':Question.query.count(),
+  #     'categories':category, 'current_category':current_category})
   '''
   @TODO: 
   Create an endpoint to DELETE question using a question ID. 
@@ -148,7 +137,23 @@ def create_app(test_config=None):
   def addQuestion_Search_question():
 
     questionData = request.get_json()
-    if questionData.get('search_term') is None:
+    if questionData.get('searchTerm'):
+      search_term = questionData.get('searchTerm')
+      try:
+        if search_term is None:
+         abort(422)
+        questionDataList  = Question.query.filter(Question.question.ilike('%'+search_term+'%')).all()
+        qdlCount = len(questionDataList)
+        questionDataList = format_data(questionDataList)
+        return jsonify({
+        'success':True,
+        'questions':questionDataList,
+        'count':qdlCount
+        })
+      except:
+        abort(422)
+
+    else:
       question = questionData.get('question')
       question_answer = questionData.get('answer')
       question_category  = questionData.get('category')
@@ -167,24 +172,7 @@ def create_app(test_config=None):
        })
       except:
        abort(422)
-
-    else:
-      search_term = questionData.get('search_term')
-      try:
-        if search_term is None:
-         abort(422)
-        questionDataList  = Question.query.filter(Question.question.ilike('%'+search_term+'%')).all()
-        qdlCount = len(questionDataList)
-        if qdlCount == 0 :
-          abort(404)
-        questionDataList = [qdl.format() for qdl in questionDataList]
-        return jsonify({
-        'success':True,
-        'question':questionDataList,
-        'count':qdlCount
-        })
-      except:
-        abort(422)
+      
   '''
   @TODO: 
   Create a POST endpoint to get questions based on a search term. 
@@ -195,27 +183,7 @@ def create_app(test_config=None):
   only question that include that string within their question. 
   Try using the word "title" to start. 
   '''
-  # @app.route('/questions',methods = ['POST'])
-  # def search_for_question():
-
-  # # query.filter(Artist.name.like('%'+dataSearch+'%'))
-  #   dataSearch = request.get_json()
-  #   search_term = dataSearch.get('search_term')
-  #   try:
-  #     if search_term is None:
-  #       abort(422)
-  #     questionDataList  = Question.query.filter(Question.question.ilike('%'+search_term+'%')).all()
-  #     qdlCount = len(questionDataList)
-  #     if qdlCount == 0 :
-  #       abort(404)
-  #     questionDataList = [qdl.format() for qdl in questionDataList]
-  #     return jsonify({
-  #       'success':True,
-  #       'question':questionDataList,
-  #       'count':qdlCount
-  #     })
-  #   except:
-  #     abort(422)
+ 
   '''
   @TODO: 
   Create a GET endpoint to get questions based on category. 
@@ -251,17 +219,35 @@ def create_app(test_config=None):
   def play_quiz():
     try:
       body = request.get_json()
-      previous_questions = body.get('previous_questions',[])
-      category = body.get('category')
-      if category is None:
-        abort(422)
-      questions = Question.query.filter_by(category = category).order_by('id').all()
-      questions = [ques.format() for ques in questions if ques not in previous_questions]
-      questions = random.choice(questions)
-      return jsonify({
-        'success':True,
-        'question':questions
-      })
+      previous_questions = body.get('previous_questions')
+      category = body.get('quiz_category')
+      if category['id'] ==0:
+        question = Question.query.order_by('id').all()
+        rQuestion =[]
+        for q in question:
+          if q.id in previous_questions:
+            continue
+          else:
+            rQuestion.append(q)
+        return jsonify({
+          'success':True,
+          'question':rQuestion[random.randint(0,len(rQuestion)-1)].format()
+        })
+      else:
+        categoryData = Category.query.get(category['id'])
+        if categoryData is None:
+          abort(404)
+        question = Question.query.filter_by(category = category['id']).order_by('id').all()
+        rQuestion = []
+        for i in question:
+          if i.id in previous_questions:
+            continue
+          else:
+            rQuestion.append(i)
+        return jsonify({
+          'success':True,
+          'question':rQuestion[random.randint(0,len(rQuestion)-1)].format()
+        })
     except:
       abort(422)
     
