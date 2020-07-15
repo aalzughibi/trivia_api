@@ -89,21 +89,7 @@ def create_app(test_config=None):
             'categories': formatted_categories,
             'current_category': current_category
         })
-  # def get_all_question():
-  #   question = Question.query.order_by('id').all()
-  #   current_question = pageinate(request,question)
-  #   if len(current_question) ==0:
-  #     abort(404)
-  #   category = Category.query.order_by('id').all()
-  #   formatted_categories = {}
-  #   for category in category:
-  #     formatted_categories[category.id] = category.type
-  #   current_category = list(set([ques['category'] for ques in current_question]))
-  #   return jsonify({
-  #     'success':True,
-  #     'questions':current_question,
-  #     'total_questions':Question.query.count(),
-  #     'categories':category, 'current_category':current_category})
+  
   '''
   @TODO: 
   Create an endpoint to DELETE question using a question ID. 

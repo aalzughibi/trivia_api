@@ -208,7 +208,102 @@ or
   "total_questions": 13
 }
 ```
+#### DELETE '/questions/<int:question_id>'
+- delete the question of given id if exist
+-return id and success
+- Sample : curl http://127.0.0.1:5000/questions/12 -X DELETE
+```
+{
+  "id": 12,
+  "success": true
+}
+```
+#### POST '/questions'
+- add new question, answer for question, category and difficulty
+- return the id of question with total question after added
+- Sample : curl http://127.0.0.1:5000/questions -X POST -H "Content-Type: application/json" -d '{"question": "what is srs in software engineering?", "answer": "software requirements specification", "category": 1,"difficulty": 1}'
+```
+{
+  "question_id_created": 16,
+  "total_question":13
+  "success": true
+}
+```
+#### POST '/categories/<int:category_id>/questions'
+- return all questions based on category and success value
+- Sample : curl http://127.0.0.1:5000/categories/1/questions OR
+- curl -x GET http://127.0.0.1:5000/categories/1/questions
+```
+{
+  "questions": [
+    {
+      "answer": "xsdsd",
+      "category": 1,
+      "difficulty": 5,
+      "id": 13,
+      "question": "what is xdd?"
+    },
+    {
+      "answer": "Software requirements specification",
+      "category": 1,
+      "difficulty": 1,
+      "id": 14,
+      "question": "what is srs"
+    },
+    {
+      "answer": "Software requirements specification",
+      "category": 1,
+      "difficulty": 4,
+      "id": 15,
+      "question": "what is srs"
+    }
+  ],
+  "success": true
+}
+```
+#### POST '/questions'
+- Search for question(s) use searchTerm
+- return random question and success value
+- Sample: curl -X POST http://127.0.0.1:5000/questions -H 'content-type: application/json' -d '{"searchTerm": "srs"}'
+```
+{
+    "questions":[ 
+        {
+      "answer": "Software requirements specification",
+      "category": 1,
+      "difficulty": 1,
+      "id": 14,
+      "question": "what is srs"
+    },
+    {
+      "answer": "Software requirements specification",
+      "category": 1,
+      "difficulty": 4,
+      "id": 15,
+      "question": "what is srs"
+    }],
+    "count": 2,
+    "success":true
+}
 
+```
+#### POST '/quizzes'
+- get random question for specific category OR all categories 
+- return random question and success value
+- Sample: curl -X POST http://127.0.0.1:5000/quizzes -H 'content-type: application/json' -d '{"previous_questions": [],"quiz_category": { "id": 1", type": "Science"}}'
+```
+{
+    "question": {
+      "answer": "Software requirements specification",
+      "category": 1,
+      "difficulty": 1,
+      "id": 14,
+      "question": "what is srs"
+    },
+    "success":true
+}
+
+```
 ## Testing
 To run the tests, run
 ```
