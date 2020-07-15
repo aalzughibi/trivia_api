@@ -28,10 +28,53 @@ def create_app(test_config=None):
   Create an endpoint to handle GET requests 
   for all available categories.
   '''
-  @app.route('/category', methods = ['GET'])
+  @app.route('/categories', methods = ['GET'])
   def get_all_categories():
+    # if True:
+    #   if True:
+    #     c  =  Category(type = 'Science')
+    #     c.insert()
+    #     c  =  Category(type = 'Art')
+    #     c.insert()
+    #     c  =  Category(type = 'Geography')
+    #     c.insert()
+    #     c  =  Category(type = 'History')
+    #     c.insert()
+    #     c  =  Category(type = 'Entertainment')
+    #     c.insert()
+    #     c  =  Category(type = 'Sports')
+    #     c.insert()
+    #     ###############################################
+    #     q = Question(question = "Whose autobiography is entitled 'I Know Why the Caged Bird Sings'?",answer = 'Maya Angelou',category =2,difficulty=4)
+    #     q.insert()
+    #     q = Question(question = "Who invented Peanut Butter?",answer = 'George Washington Carver',category =2,difficulty=4)
+    #     q.insert()
+
+    #     q = Question(question = "What is the largest lake in Africa?",answer = 'Lake Victoria',category =2,difficulty=3)
+    #     q.insert()
+    #     q = Question(question = "In which royal palace would you find the Hall of Mirrors?",answer = 'The Palace of Versailles',category =3,difficulty=3)
+    #     q.insert()
+    #     q = Question(question = "The Taj Mahal is located in which Indian city?",answer = 'Agra',category =2,difficulty=3)
+    #     q.insert()
+    #     q = Question(question = "La Giaconda is better known as what?",answer = 'Mona Lisa',category =3,difficulty=2)
+    #     q.insert()
+    #     q = Question(question = "How many paintings did Van Gogh sell in his lifetime?",answer = 'one',category =4,difficulty=2)
+    #     q.insert()
+    #     q = Question(question = "Which American artist was a pioneer of Abstract Expressionism, and a leading exponent of action painting?",answer = 'Jackson Pollock',category =2,difficulty=2)
+    #     q.insert()
+    #     q = Question(question = "What is the heaviest organ in the human body?",answer = 'The Liver',category =4,difficulty=1)
+    #     q.insert()
+    #     q = Question(question = "Who discovered penicillin?",answer = 'Alexander Fleming',category =3,difficulty=1)
+    #     q.insert()
+    #     q = Question(question = "Hematology is a branch of medicine involving the study of what?",answer = 'Blood',category =4,difficulty=1)
+    #     q.insert()
+    #     q = Question(question = "Which dung beetle was worshipped by the ancient Egyptians?",answer = 'Scarab',category =4,difficulty=4)
+    #     q.insert()
     categories = Category.query.order_by('id').all()
-    current_category = [c.format() for c in categories]
+    current_category = {}
+
+    for i in categories:
+      current_category[i.id] = i.type
     
     if len(current_category) ==0:
       abort(404)
@@ -59,7 +102,7 @@ def create_app(test_config=None):
     current_questions = questions[start:end]
     return current_questions
   # ##### ##### ##### ##### ##### ##### #####
-  @app.route('/question',methods = ['GET'])
+  @app.route('/questions',methods = ['GET'])
   def get_all_question():
     question = Question.query.order_by('id').all()
     current_question = pageinate(request,question)
@@ -75,11 +118,10 @@ def create_app(test_config=None):
   '''
   @TODO: 
   Create an endpoint to DELETE question using a question ID. 
-
   TEST: When you click the trash icon next to a question, the question will be removed.
   This removal will persist in the database and when you refresh the page. 
   '''
-  @app.route('/question/<int:question_id>',methods = ['DELETE'])
+  @app.route('/questions/<int:question_id>',methods = ['DELETE'])
   def delete_question(question_id):
     question = Question.query.get(question_id)
     if question is None:
@@ -102,27 +144,47 @@ def create_app(test_config=None):
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.  
   '''
-  @app.route('/question',methods = ['POST'])
-  def addQuestion():
+  @app.route('/questions',methods = ['POST'])
+  def addQuestion_Search_question():
+
     questionData = request.get_json()
-    question = questionData.get('question')
-    question_answer = questionData.get('answer')
-    question_category  = questionData.get('category')
-    question_difficulty = questionData.get('difficulty')
+    if questionData.get('search_term') is None:
+      question = questionData.get('question')
+      question_answer = questionData.get('answer')
+      question_category  = questionData.get('category')
+      question_difficulty = questionData.get('difficulty')
 
-    if question is None or question_answer is None or question_category is None or question_difficulty is None:
-      abort(422)
-    try:
-      ques = Question(question = question,answer = question_answer, category = question_category, difficulty = question_difficulty)
-      ques.insert()
+      if question is None or question_answer is None or question_category is None or question_difficulty is None:
+        abort(422)
+      try:
+        ques = Question(question = question,answer = question_answer, category = question_category, difficulty = question_difficulty)
+        ques.insert()
 
-      return jsonify({
+        return jsonify({
         'success':True,
         'question_id_created':ques.id,
         'total_question':Question.query.count()
-      })
-    except:
-      abort(422)
+       })
+      except:
+       abort(422)
+
+    else:
+      search_term = questionData.get('search_term')
+      try:
+        if search_term is None:
+         abort(422)
+        questionDataList  = Question.query.filter(Question.question.ilike('%'+search_term+'%')).all()
+        qdlCount = len(questionDataList)
+        if qdlCount == 0 :
+          abort(404)
+        questionDataList = [qdl.format() for qdl in questionDataList]
+        return jsonify({
+        'success':True,
+        'question':questionDataList,
+        'count':qdlCount
+        })
+      except:
+        abort(422)
   '''
   @TODO: 
   Create a POST endpoint to get questions based on a search term. 
@@ -133,27 +195,27 @@ def create_app(test_config=None):
   only question that include that string within their question. 
   Try using the word "title" to start. 
   '''
-  @app.route('/questionSearch',methods = ['POST'])
-  def search_for_question():
+  # @app.route('/questions',methods = ['POST'])
+  # def search_for_question():
 
-  # query.filter(Artist.name.like('%'+dataSearch+'%'))
-    dataSearch = request.get_json()
-    search_term = dataSearch.get('search_term')
-    try:
-      if search_term is None:
-        abort(422)
-      questionDataList  = Question.query.filter(Question.question.like('%'+search_term+'%')).all()
-      qdlCount = len(questionDataList)
-      if qdlCount == 0 :
-        abort(404)
-      questionDataList = [qdl.format() for qdl in questionDataList]
-      return jsonify({
-        'success':True,
-        'question':questionDataList,
-        'count':qdlCount
-      })
-    except:
-      abort(422)
+  # # query.filter(Artist.name.like('%'+dataSearch+'%'))
+  #   dataSearch = request.get_json()
+  #   search_term = dataSearch.get('search_term')
+  #   try:
+  #     if search_term is None:
+  #       abort(422)
+  #     questionDataList  = Question.query.filter(Question.question.ilike('%'+search_term+'%')).all()
+  #     qdlCount = len(questionDataList)
+  #     if qdlCount == 0 :
+  #       abort(404)
+  #     questionDataList = [qdl.format() for qdl in questionDataList]
+  #     return jsonify({
+  #       'success':True,
+  #       'question':questionDataList,
+  #       'count':qdlCount
+  #     })
+  #   except:
+  #     abort(422)
   '''
   @TODO: 
   Create a GET endpoint to get questions based on category. 
@@ -162,12 +224,12 @@ def create_app(test_config=None):
   categories in the left column will cause only questions of that 
   category to be shown. 
   '''
-  @app.route('/category/<int:category_id>/question')
+  @app.route('/categories/<int:category_id>/questions',methods = ['GET'])
   def getQuestionByCategory(category_id):
     category = Category.query.get(category_id)
     if category is None:
       abort(404)
-    question = Question.query.filter_by(category = category.type).order_by('id').all()
+    question = Question.query.filter_by(category = category.id).order_by('id').all()
     question = [ques.format() for ques in question]
     return jsonify({
       'success':True,
@@ -185,7 +247,7 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   '''
-  @app.route('/Quiz',methods = ['POST'])
+  @app.route('/quizzes',methods = ['POST'])
   def play_quiz():
     try:
       body = request.get_json()
@@ -194,9 +256,7 @@ def create_app(test_config=None):
       if category is None:
         abort(422)
       questions = Question.query.filter_by(category = category).order_by('id').all()
-      questions = [ques.format() for ques in questions if ques.id not in previous_questions]
-      if len(questions) == 0:
-        abort(404)
+      questions = [ques.format() for ques in questions if ques not in previous_questions]
       questions = random.choice(questions)
       return jsonify({
         'success':True,
