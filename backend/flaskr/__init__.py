@@ -58,33 +58,36 @@ def create_app(test_config=None):
   ten questions per page and pagination at the bottom of the screen for three pages.
   Clicking on the page numbers should update the questions. 
   '''
-  def paginate_questions(request):
+  def paginate_questions(request,selection):
     page = request.args.get('page', 1, type=int)
     start = (page-1)*QUESTIONS_PER_PAGE
     end = start+QUESTIONS_PER_PAGE
-    questions = Question.query.all()
-    return questions[start:end]
+    formatted_selection = [sel.format() for sel in selection]
+    return formatted_selection[start:end]
 
-  def format_data(items):
-    formatted_items = [item.format() for item in items]
-    return formatted_items
   # ##### ##### ##### ##### ##### ##### #####
   @app.route('/questions',methods = ['GET'])
   def get_all_question():
-    questions = paginate_questions(request)
+    questions = Question.query.order_by('id').all()
     if len(questions) == 0:
       abort(404)
-    formatted_questions = format_data(questions)
+    questions = paginate_questions(request,questions)
     categories = Category.query.order_by('id').all()
     formatted_categories = {}
     for category in categories:
       formatted_categories[category.id] = category.type
-    total_question = len(Question.query.all())
-    current_category = list(set([ques['category'] for ques in formatted_questions]))
+    total_question = Question.query.count()
+    current_category = []
+    for i in questions:
+      if i['category'] in current_category:
+        continue
+      else:
+        current_category.append(i['category'])
+    
     
     return jsonify({
             'success': True,
-            'questions': formatted_questions,
+            'questions': questions,
             'total_questions': total_question,
             'categories': formatted_categories,
             'current_category': current_category
@@ -130,7 +133,7 @@ def create_app(test_config=None):
          abort(422)
         questionDataList  = Question.query.filter(Question.question.ilike('%'+search_term+'%')).all()
         qdlCount = len(questionDataList)
-        questionDataList = format_data(questionDataList)
+        questionDataList = [qdl.format() for qdl in questionDataList]
         return jsonify({
         'success':True,
         'questions':questionDataList,
@@ -215,9 +218,10 @@ def create_app(test_config=None):
             continue
           else:
             rQuestion.append(q)
+          RandomChoice = random.choice(rQuestion)
         return jsonify({
           'success':True,
-          'question':rQuestion[random.randint(0,len(rQuestion)-1)].format()
+          'question':RandomChoice.format()
         })
       else:
         categoryData = Category.query.get(category['id'])
@@ -230,9 +234,11 @@ def create_app(test_config=None):
             continue
           else:
             rQuestion.append(i)
+          RandomChoice = random.choice(rQuestion)
+          # rQuestion[random.randint(0,len(rQuestion)-1)].format()
         return jsonify({
           'success':True,
-          'question':rQuestion[random.randint(0,len(rQuestion)-1)].format()
+          'question':RandomChoice.format()
         })
     except:
       abort(422)
