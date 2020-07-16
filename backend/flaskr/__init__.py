@@ -65,7 +65,6 @@ def create_app(test_config=None):
     formatted_selection = [sel.format() for sel in selection]
     return formatted_selection[start:end]
 
-  # ##### ##### ##### ##### ##### ##### #####
   @app.route('/questions',methods = ['GET'])
   def get_all_question():
     questions = Question.query.order_by('id').all()
@@ -83,8 +82,6 @@ def create_app(test_config=None):
         continue
       else:
         current_category.append(i['category'])
-    
-    
     return jsonify({
             'success': True,
             'questions': questions,
@@ -235,7 +232,6 @@ def create_app(test_config=None):
           else:
             rQuestion.append(i)
           RandomChoice = random.choice(rQuestion)
-          # rQuestion[random.randint(0,len(rQuestion)-1)].format()
         return jsonify({
           'success':True,
           'question':RandomChoice.format()
